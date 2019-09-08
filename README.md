@@ -4,4 +4,4 @@ Feedback is very welcome via [@CedScherer](https://twitter.com/cedscherer) or [c
 
 ### September 2019 - Visualizing Uncertainty
 Berlin daily temperatures via [DWD(Deutscher Wetterdienst)](https://www.dwd.de/DE/leistungen/klimadatendeutschland/klarchivtagmonat.html)
-![./plots/SWD_2019-09_Uncertainty.png](https://github.com/Z3tt/TidyTuesday/blob/master/plots/SWD_2019-09_Uncertainty.png.png)
+![./plots/SWD_2019-09_Uncertainty.png](https://github.com/Z3tt/TidyTuesday/blob/master/plots/SWD_2019-09_Uncertainty.png)
