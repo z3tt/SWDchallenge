@@ -107,7 +107,7 @@ legend <- ggplot(data = tibble(x = 0:10, y = rep(1, 11)), aes(x, y)) +
 title <- ggplot(data.frame(x = 1:2, y = 1:10)) +
   labs(x = NULL, y = NULL,
        title = "Maximale Tagestemperaturen in Berlin",
-       subtitle = "Verteilung der maximalen Tagestemperaturen pro Monat fpr den zeitraum 1. Januar 2000 bis 31. Dezember 2018, gemessen in Berlin-Dahlem") +
+       subtitle = "Verteilung der maximalen Tagestemperaturen in Berlin-Dahlem im Jahresverlauf von 1. Januar 2000 bis 31. Dezember 2018") +
        theme(line = element_blank(),
              plot.title = element_text(size = 26, hjust = 0, face = "bold", family = "Bitter"),
              plot.subtitle = element_text(size = 13, hjust = 0, color = "grey65"),
@@ -118,7 +118,7 @@ title <- ggplot(data.frame(x = 1:2, y = 1:10)) +
 
 caption <- ggplot(data.frame(x = 1:2, y = 1:10)) +
   labs(x = NULL, y = NULL, 
-       caption = "Visualisierung: Cédric Scherer  |  Datem: DWD (Deutscher Wetterdienst)") +
+       caption = "Visualisierung: Cédric Scherer  |  Daten: DWD (Deutscher Wetterdienst)") +
        theme(line = element_blank(),
              plot.caption = element_text(size = 10, color = "grey65"),
              panel.background = element_rect(fill = "transparent", color = "transparent"),
