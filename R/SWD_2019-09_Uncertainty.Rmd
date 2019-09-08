@@ -14,7 +14,7 @@ editor_options:
 knitr::opts_chunk$set(echo = TRUE, warning=FALSE)
 ```
 
-```{r libraries}
+```{r prep}
 library(tidyverse)
 library(tidybayes)
 library(patchwork)
@@ -64,7 +64,7 @@ df_dwd_dahlem <-
 ```
 
 
-```{r}
+```{r plot, fig.width = 13, fig.height = 8}
 plot <- 
   df_dwd_dahlem %>% 
   filter(year >= 2000) %>% 
