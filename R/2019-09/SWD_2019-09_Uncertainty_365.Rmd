@@ -131,7 +131,7 @@ plot_ins <- ggdraw(plot) +
 
 title + plot_ins + caption + plot_layout(widths = c(0, 1, 0))
 
-ggsave(here::here("plots", "SWD_2019-09_Uncertainty_365.pdf"), 
+ggsave(here::here("plots", "2019-09", "SWD_2019-09_Uncertainty_365.pdf"), 
        width = 13, height = 8, device = cairo_pdf)
 ```
 
