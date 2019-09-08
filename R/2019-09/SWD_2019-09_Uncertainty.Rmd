@@ -1,0 +1,142 @@
+---
+title: "SWD Challenge September 2019 - Visualizing Uncertainty"
+author: "Cedric Scherer"
+date: "8th of September 2019"
+output:
+  html_document:
+    theme: paper
+    highlight: kate
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE)
+```
+
+```{r prep}
+library(tidyverse)
+library(tidybayes)
+library(patchwork)
+library(cowplot)
+library(extrafont)
+
+extrafont::loadfonts(device = "win", quiet = TRUE)
+
+theme_set(theme_minimal(base_family = "Bitter"))
+```
+
+
+```{r data}
+## Data source: DWD (Deutscher Wetterdienst)
+## https://www.dwd.de/DE/leistungen/_config/leistungsteckbriefPublication.zip?view=nasPublication&nn=16102&imageFilePath=157242051950877752011408908330930139598321949458353665338080907323067407358570939094063695252196106887026681320814526060536595251033063153662108661981192575715848535028223489905255018373803265100435386215906807083067001006526258509883339654785117109676510167984069504119&download=true
+
+df_dwd_dahlem <- 
+  readr::read_delim(
+    here::here("data", "produkt_klima_tag_19500101_20181231_00403_Dahlem.txt"), 
+    delim = ";"
+  ) %>% 
+  dplyr::select(
+    station_id = STATIONS_ID,
+    date = MESS_DATUM, 
+    t_avg = " TMK", 
+    t_min = " TNK", 
+    t_max = " TXK"
+  ) %>% 
+  mutate_all(as.numeric) %>% 
+  mutate(
+    date = lubridate::ymd(date),
+    year = lubridate::year(date),
+    month = lubridate::month(date)
+  )
+```
+
+
+```{r plot, fig.width = 13, fig.height = 8}
+plot <- 
+  df_dwd_dahlem %>% 
+  filter(year >= 2000) %>% 
+  ggplot(aes(t_max, month)) +
+    stat_intervalh(.width = c(.1, .25, .5, .75, 1), 
+                   height = 5, show.legend = F) +
+    rcartocolor::scale_color_carto_d(palette = "Peach") + 
+    stat_halfeyeh(aes(t_max, month + 0.06), 
+                  .width = 0, fill = "tan", alpha = 0.2, 
+                  size = 0.7, point_alpha = 1, height = 0.7) +
+    coord_flip(ylim = c(0.5, 13)) +
+    scale_x_continuous(expand = c(0, 0), limits = c(-13, 38), 
+                       breaks = seq(-10, 35, by = 5), 
+                       labels = glue::glue("{seq(-10, 35, by = 5)}°C")) + 
+    scale_y_continuous(expand = c(0, 0), breaks = 1:12,
+                       labels = c("January", 
+                                  "February",
+                                  "March",
+                                  "April",
+                                  "May",
+                                  "June",
+                                  "July",
+                                  "August",
+                                  "September",
+                                  "October",
+                                  "November",
+                                  "December")
+                       ) +
+    labs(x = "", y = "") +
+    theme(panel.grid.minor = element_blank(),
+          panel.grid.major.x = element_blank(),
+          panel.grid.major.y = element_line(size = 0.1),
+          axis.text.x = element_text(size = 11, face = "bold"),
+          axis.text.y = element_text(size = 9, color = "grey65"))
+
+
+legend_text <- 
+  tibble(
+    xt = c(5, 4.125, 3.125, 1.875, 0.625, 7.5),
+    yt = rep(1.02, 6),
+    text = c("10%", "25%", "50%", "75%", "100%", "of measured temperatures fall in this range")
+  )
+
+legend <- ggplot(data = tibble(x = 0:10, y = rep(1, 11)), aes(x, y)) + 
+  stat_intervalh(.width = c(.1, .25, .5, .75, 1), show.legend = F) +
+  rcartocolor::scale_color_carto_d(palette = "Peach") +
+  coord_cartesian(ylim = c(0.9, 1.1)) +
+  geom_text(data = legend_text, aes(xt, yt, label = text), 
+            family = "Bitter", color = "grey65", size = 3) +
+  theme_void()
+
+title <- ggplot(data.frame(x = 1:2, y = 1:10)) +
+  labs(x = NULL, y = NULL,
+       title = "Daily Temperatures in Berlin, Germany",
+       subtitle = "Range and distribution of maximum daily temperatures in Celsius per month from 2000 to 2018 measured in Berlin-Dahlem, Germany") +
+       theme(line = element_blank(),
+             plot.title = element_text(size = 26, hjust = 0, face = "bold", family = "Bitter"),
+             plot.subtitle = element_text(size = 13, hjust = 0, color = "grey65"),
+             panel.background = element_rect(fill = "transparent", color = "transparent"),
+             plot.background = element_rect(fill = "transparent", color = "transparent"),
+             panel.border = element_rect(color = "transparent"),
+             axis.text = element_blank())
+
+caption <- ggplot(data.frame(x = 1:2, y = 1:10)) +
+  labs(x = NULL, y = NULL, 
+       caption = "Visualization by Cédric Scherer  |  Data: DWD (Deutscher Wetterdienst)") +
+       theme(line = element_blank(),
+             plot.caption = element_text(size = 10, color = "grey65"),
+             panel.background = element_rect(fill = "transparent", color = "transparent"),
+             plot.background = element_rect(fill = "transparent", color = "transparent"),
+             panel.border = element_rect(color = "transparent"),
+             axis.text = element_blank())
+
+plot_ins <- ggdraw(plot) +
+  draw_plot(legend, .275, .01, .525, .3)
+
+title + plot_ins + caption + plot_layout(widths = c(0, 1, 0))
+
+ggsave(here::here("plots", "SWD_2019-09_Uncertainty.pdf"), 
+       width = 13, height = 8, device = cairo_pdf)
+```
+
+***
+
+```{r}
+sessionInfo()
+```
