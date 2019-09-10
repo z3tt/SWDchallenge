@@ -79,8 +79,7 @@ plot <-
                                   "September",
                                   "October",
                                   "November",
-                                  "December")
-                       ) +
+                                  "December")) +
     labs(x = "", y = "") +
     theme(panel.grid.minor = element_blank(),
           panel.grid.major.x = element_blank(),
