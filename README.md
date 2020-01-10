@@ -19,7 +19,7 @@ Quick Link
 
 <div align="center">
 
-My contributions to the [#SWDchallenge](http://www.storytellingwithdata.com/swdchallenge).  
+My contributions to the [#SWDchallenge](http://www.storytellingwithdata.com/swdchallenge).
 Feedback is very welcome via [Twitter](https://twitter.com/cedscherer) or [mail](mailto:cedricphilippscherer@gmail.com).
 
 </div>
