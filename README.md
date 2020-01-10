@@ -1,6 +1,28 @@
-# SWD Challenge
+<h1 style="font-weight:normal" align="center">
+  &nbsp;#SWDchallenge Contributions&nbsp;
+</h1>
+
+<div align="center">
+
+:speech_balloon: [Twitter][Twitter]&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;:necktie: [LinkedIn][LinkedIn]&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;:octocat: [GitHub][GitHub]&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;:link: [Website][Website]
+
+</div>
+
+<!--
+Quick Link
+-->
+
+[Twitter]:https://twitter.com/CedScherer
+[LinkedIn]:https://www.linkedin.com/in/cedricpscherer/
+[GitHub]:https://github.com/Z3tt
+[Website]:https://cedricscherer.netlify.com/
+
+<div align="center">
+
 My contributions to the [#SWDchallenge](http://www.storytellingwithdata.com/swdchallenge).  
-Feedback is very welcome via [@CedScherer](https://twitter.com/cedscherer) or [cedricphilippscherer@gmail.com](mailto:cedricphilippscherer@gmail.com).
+Feedback is very welcome via [Twitter](https://twitter.com/cedscherer) or [mail](mailto:cedricphilippscherer@gmail.com).
+
+</div>
 
 ***
 
