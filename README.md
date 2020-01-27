@@ -27,7 +27,7 @@ Feedback is very welcome via [Twitter](https://twitter.com/cedscherer) or [mail]
 ***
 
 ### Jnauary 2020 - Small Multiples
-![./plots/2020_01/SWD_2020_01_SmallMultiples.png](https://raw.githubusercontent.com/Z3tt/SWDchallenge/master/plots/2020_01/SWD_2020_01_SmallMultiples.png)
+![./plots/2020_01/SWD_2020_01_SmallMultiples_grey.png](https://raw.githubusercontent.com/Z3tt/SWDchallenge/master/plots/2020_01/SWD_2020_01_SmallMultiples_grey.png)
 
 ***
 
