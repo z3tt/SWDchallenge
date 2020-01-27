@@ -26,6 +26,11 @@ Feedback is very welcome via [Twitter](https://twitter.com/cedscherer) or [mail]
 
 ***
 
+### Jnauary 2020 - Small Multiples
+![./plots/2020_01/SWD_2020_01_SmallMultiples.png](https://raw.githubusercontent.com/Z3tt/SWDchallenge/master/plots/2020_01/SWD_2020_01_SmallMultiples.png)
+
+***
+
 ### September 2019 - Visualizing Uncertainty
 Berlin daily temperatures via [DWD (Deutscher Wetterdienst)](https://www.dwd.de/DE/leistungen/klimadatendeutschland/klarchivtagmonat.html)<br><br>
 ![./plots/2019_09/SWD_2019_09_Uncertainty.png](https://raw.githubusercontent.com/Z3tt/SWDchallenge/master/plots/2019_09/SWD_2019_09_Uncertainty.png)
