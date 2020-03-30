@@ -47,3 +47,6 @@ rsconnect/
 
 # _all png directory
 /plots/_all/
+
+# images for corona series
+/plots/2020_03/series*
