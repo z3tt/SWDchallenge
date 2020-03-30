@@ -28,7 +28,7 @@ Feedback is very welcome via [Twitter](https://twitter.com/cedscherer) or [mail]
 ***
 
 ### March 2020 - [Get Animated!](https://github.com/Z3tt/SWDchallenge/tree/master/plots/2020_03)
-![./plots/2020_03/corona_begin.mp4](https://raw.githubusercontent.com/Z3tt/SWDchallenge/master/plots/2020_03/corona_begin.mp4)
+![./plots/2020_03/corona_begin.mp4](https://raw.githubusercontent.com/Z3tt/SWDchallenge/master/plots/2020_03/corona_begin.gif)
 
 ***
 
