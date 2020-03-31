@@ -1,0 +1,385 @@
+---
+title: "Corona Animation"
+author: "Cedric Scherer"
+date: "29th of March 2020"
+output:
+  html_document:
+  theme: paper
+highlight: kate
+editor_options:
+  chunk_output_type: console
+---
+  
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = F)
+Sys.setlocale("LC_TIME", "C")
+```
+
+```{r prep}
+library(tidyverse)
+library(lubridate)
+library(ggtext)
+library(pdftools)
+library(magick)
+library(showtext)
+
+font_add_google("Open Sans", "Open Sans")
+font_add_google("Overpass", "Overpass")
+font_add_google("Overpass Mono", "Overpass Mono")
+
+theme_set(theme_minimal(base_size = 16, base_family = "Open Sans"))
+theme_update(axis.text.x = element_text(size = 12),
+             axis.text.y = element_text(size = 12, face = "bold", color = "black"),
+             axis.ticks.x = element_line(color = "grey50", size = .4),
+             axis.ticks.y = element_blank(),
+             axis.ticks.length = unit(.3, "lines"),
+             axis.title.y = element_text(face = "bold"),
+             legend.position = "top",
+             legend.title = element_text(size = 15, color = "grey20"),
+             legend.text = element_text(family = "Overpass Mono", size = 10, color = "grey20"),
+             legend.margin = margin(5, 0, 20, 0),
+             panel.grid = element_blank(),
+             plot.title = element_markdown(family = "Overpass", size = 34, face = "bold", 
+                                           color = "grey20", hjust = .5, margin = margin(20, 0, 25, 0)),
+             plot.title.position = "plot",
+             plot.caption = element_markdown(size = 11, color = "grey20", hjust = 1, margin = margin(35, 0, 0, 0)),
+             plot.margin = margin(20, 50, 20, 30))
+```
+
+
+```{r data}
+df_corona <- readr::read_csv(here::here("data", "time-series-19-covid-combined_csv.csv"))  ## first version
+#df_corona <- readr::read_csv("https://datahub.io/core/covid-19/r/time-series-19-covid-combined.csv") ## latest data
+
+df_corona_days <-
+  df_corona %>% 
+  dplyr::select(
+    date = Date,
+    country = `Country/Region`,
+    state = `Province/State`,
+    deaths = Deaths
+  ) %>% 
+  group_by(country, date) %>% 
+  summarize(deaths = sum(deaths, na.rm = T)) %>% 
+  group_by(country) %>%
+  mutate(
+    yday = yday(date),
+    day = day(date),
+    month = month(date, label = T)
+  ) %>% 
+  arrange(country, yday) %>% 
+  mutate(daily = deaths - lag(deaths)) %>% 
+  mutate(daily = if_else(daily <= 0, NA_real_, daily)) %>% 
+  #filter(deaths > 0) %>% 
+  group_by(country) %>% 
+  mutate(n = sum(daily > 0, na.rm = T)) %>% 
+  ungroup() %>% 
+  mutate(country = case_when(
+    country == "US" ~ "United States of America",
+    country == "Korea, South" ~ "South Korea",
+    TRUE ~ country
+  ))
+
+df_corona_world <-
+  df_corona_days %>% 
+  group_by(date, yday, day, month) %>% 
+  summarize_at(
+    vars(c("deaths", "daily", "n")), sum, na.rm = T
+  ) %>% 
+  mutate(country = "World")
+
+df_corona_fct <- 
+  df_corona_days %>% 
+  bind_rows(df_corona_world) %>% 
+  filter(n >= 10) %>% 
+  group_by(country) %>% 
+  mutate(
+    max = max(daily, na.rm = T),
+    rel = daily / max,
+    day_first = min(yday[which(rel > 0)])
+  ) %>% 
+  ungroup() %>% 
+  mutate(
+    country = factor(country),
+    country = fct_reorder(country, -day_first)
+  ) %>% 
+  filter(yday > min(yday))
+
+first_day <- min(df_corona_fct$yday)
+latest_day <- max(df_corona_fct$yday)
+n_countries <- n_distinct(df_corona_fct$country)
+dates <- c(23, 32, 46, 61, 75, 89)
+dates_labs <- c("Jan 23", "Feb 1", "Feb 15", "Mar 1", "Mar 15", "Mar 29")
+```
+
+```{r animation-ranked-by-death-toll}
+for(i in first_day:latest_day) {
+  print(i)
+  
+  df <-
+    df_corona_fct %>% 
+    filter(yday <= i) %>% 
+    group_by(country) %>% 
+    mutate(
+      max = max(daily, na.rm = T),
+      rel = daily / max,
+      day_max = max(yday[which(rel == 1)]),
+      sum = sum(daily, na.rm = T),
+      lab = format(sum, big.mark = ","),
+      lab = if_else(country == "World", glue::glue("**{lab}**"), glue::glue("{lab}"))
+    ) %>% 
+    ungroup() %>% 
+    mutate(country = fct_reorder(country, sum))
+  
+  df_dots <- 
+    df_corona_fct %>% 
+    filter(yday %in% dates) %>% 
+    mutate(country = factor(country, levels = levels(df$country)))
+  
+  g <-
+    ggplot(df,
+           aes(country,
+               yday, 
+               group = yday,
+               fill = rel)) +
+      geom_point(data = df_dots,
+                 aes(country, yday),
+                 color = "grey50",
+                 shape = 20,
+                 size = .1) +
+      geom_tile(aes(color = rel),
+                size = .1) +
+      geom_richtext(data = df %>% filter(yday == i),
+                    aes(country,
+                        22,
+                        label = lab),
+                    family = "Overpass Mono",
+                    size = 3.8,
+                    fill = NA, 
+                    label.color = NA,
+                    hjust = 1,
+                    vjust = .6) +
+      geom_segment(aes(x = n_countries - .5,
+                       xend = n_countries - .5,
+                       y = 19.1,
+                       yend = i + .5),
+                   color = "grey40",
+                   size = .2) +
+      coord_flip() +
+      scale_x_discrete(expand = c(.001, .001)) +
+      scale_y_continuous(expand = c(.001, 0.01),
+                         limits = c(19.1, latest_day + .5),
+                         sec.axis = dup_axis(),
+                         breaks = dates,
+                         labels = dates_labs) + 
+      rcartocolor::scale_color_carto_c(palette = "PinkYl", 
+                                       na.value = "#badad0",
+                                       limits = c(0, 1),
+                                       guide = F) +
+      rcartocolor::scale_fill_carto_c(palette = "PinkYl", 
+                                      na.value = "#badad0",
+                                      name = "COVID-19 death cases relative to each country's highest daily death toll so far",
+                                      limits = c(0, 1),
+                                      breaks = c(.01, seq(.1, 1, by = .1)),
+                                      labels = scales::percent_format(accuracy = 1)) +
+      guides(fill = guide_colorbar(title.position = "top",
+                                   title.hjust = .5,
+                                   label.position = "bottom",
+                                   label.hjust = .5,
+                                   barwidth = unit(45, "lines"),
+                                   barheight = unit(.6, "lines"))) +
+    labs(x = NULL, y = NULL, 
+         title = "<b style='color:#c93a6e;'>The Worst Days:</b> Peaks in Confirmed Daily Deaths Due to COVID-19 So Far",
+         caption = "**Note:** The animation shows **countries with at least 10 deaths** due to the corona virus disease 2019 (COVID-19). The color intensity<br>for each day and country is estimated as the number of deaths on this particular day divided by the highest daily death toll so far.<br><br>**Visualization: Cédric Scherer  •  Data: Johns Hopkins University Center for Systems Science and Engineering (CSSE) via datahub.io**")
+  
+  g_daily <-
+    g +
+      geom_text(data = df %>% filter(yday == i),
+                aes(country,
+                    yday,
+                    label = daily),
+                family = "Overpass Mono",
+                color = "black",
+                fontface = "bold",
+                size = 1.9,
+                hjust = .5)
+  
+  ggsave(here::here("plots", "2020_03", "series_sum", glue::glue("corona_yday_{i}.pdf")),
+         width = 18.2, height = 12.2, device = cairo_pdf)
+  
+  if(i == latest_day) {
+    g_latest <- 
+      g +
+        geom_tile(data = df %>% filter(rel == 1),
+                  color = "black",
+                  fill = NA,
+                  size = .5) +
+        geom_text(data = df %>% filter(yday == i),
+                  aes(country,
+                      yday,
+                      label = daily),
+                  family = "Overpass Mono",
+                  color = "grey40",
+                  size = 1.9,
+                  hjust = .5) +
+        geom_text(data = df %>% filter(rel == 1),
+                  aes(country,
+                      yday,
+                      label = daily),
+                  family = "Overpass Mono",
+                  fontface = "bold",
+                  size = 1.9,
+                  hjust = .5)
+    
+    ggsave(here::here("plots", "2020_03", "series_sum", glue::glue("corona_yday_latest.pdf")),
+           width = 18.2, height = 12.2, device = cairo_pdf)
+  }
+}
+
+## convert pdf's to png's
+setwd(here::here("plots", "2020_03", "series_sum"))
+pdfs <- list.files(here::here("plots", "2020_03", "series_sum"), pattern = "*.pdf")
+
+for(pdf in pdfs) {
+  pdf_convert(pdf = here::here("plots", "2020_03", "series_sum", pdf), 
+              format = "png", dpi = 200)
+}
+
+## convert png's to gif
+system("magick.exe -delay 70 *.png -delay 700 *latest_1.png -loop 0 corona_series_sum.gif")
+```
+
+
+```{r animation-ranked-by-begin}
+for(i in first_day:latest_day) {
+  print(i)
+  
+  df <-
+    df_corona_fct %>% 
+    filter(yday <= i) %>% 
+    group_by(country) %>% 
+    mutate(
+      max = max(daily, na.rm = T),
+      rel = daily / max,
+      day_max = max(yday[which(rel == 1)]),
+      sum = sum(daily, na.rm = T),
+      lab = format(sum, big.mark = ","),
+      lab = if_else(country == "World", glue::glue("**{lab}**"), glue::glue("{lab}"))
+    ) %>% 
+    ungroup() %>% 
+    mutate(country = fct_reorder(country, sum))
+  
+  g <-
+    ggplot(df,
+           aes(country,
+               yday, 
+               group = yday,
+               fill = rel)) +
+      geom_point(data = df_corona_fct %>% filter(yday %in% dates),
+                aes(country, yday),
+                color = "grey50",
+                shape = 20,
+                size = .01) +
+      geom_tile(aes(color = rel),
+                size = .1) +
+      geom_richtext(data = df %>% filter(yday == i),
+                    aes(country,
+                        22,
+                        label = lab),
+                    family = "Overpass Mono",
+                    size = 3.8,
+                    fill = NA, 
+                    label.color = NA,
+                    hjust = 1,
+                    vjust = .6) +
+      geom_segment(aes(x = n_countries - .5,
+                       xend = n_countries - .5,
+                       y = 19.1,
+                       yend = i + .5),
+                   color = "black",
+                   size = .2) +
+      coord_flip() +
+      scale_x_discrete(expand = c(.001, 0.01)) +
+      scale_y_continuous(expand = c(.001, 0.01),
+                         limits = c(19.1, latest_day + .5),
+                         sec.axis = dup_axis(),
+                         breaks = dates,
+                         labels = dates_labs) + 
+      rcartocolor::scale_color_carto_c(palette = "PinkYl", 
+                                       na.value = "#badad0",
+                                       limits = c(0, 1),
+                                       guide = F) +
+      rcartocolor::scale_fill_carto_c(palette = "PinkYl", 
+                                      na.value = "#badad0",
+                                      name = "COVID-19 death cases relative to each country's highest daily death toll so far",
+                                      limits = c(0, 1),
+                                      breaks = c(.01, seq(.1, 1, by = .1)),
+                                      labels = scales::percent_format(accuracy = 1)) +
+      guides(fill = guide_colorbar(title.position = "top",
+                                   title.hjust = .5,
+                                   label.position = "bottom",
+                                   label.hjust = .5,
+                                   barwidth = unit(45, "lines"),
+                                   barheight = unit(.6, "lines"))) +
+    labs(x = NULL, y = NULL, 
+         title = "<b style='color:#c93a6e;'>The Worst Days:</b> Peaks in Confirmed Daily Deaths Due to COVID-19 So Far",
+         caption = "**Note:** The animation shows **countries with at least 10 deaths** due to the corona virus disease 2019 (COVID-19). The color intensity<br>for each day and country is estimated as the number of deaths on this particular day divided by the highest daily death toll so far.<br><br>**Visualization: Cédric Scherer  •  Data: Johns Hopkins University Center for Systems Science and Engineering (CSSE) via datahub.io**")
+  
+  g_daily <- 
+    g +
+      geom_text(data = df %>% filter(yday == i),
+                  aes(country,
+                      yday,
+                      label = daily),
+                  family = "Overpass Mono",
+                  color = "black",
+                  fontface = "bold",
+                  size = 1.9,
+                  hjust = .5)
+  
+  ggsave(here::here("plots", "2020_03", "series_begin", glue::glue("corona_yday_{i}.pdf")),
+         width = 18.2, height = 12.2, device = cairo_pdf)
+  
+  if(i == latest_day) {
+    g_latest <- 
+      g +
+        geom_tile(data = df %>% filter(rel == 1),
+                  color = "black",
+                  fill = NA,
+                  size = .5) +
+        geom_text(data = df %>% filter(yday == i),
+                  aes(country,
+                      yday,
+                      label = daily),
+                  family = "Overpass Mono",
+                  color = "grey20",
+                  size = 1.9,
+                  hjust = .5) +
+        geom_text(data = df %>% filter(rel == 1),
+                  aes(country,
+                      yday,
+                      label = daily),
+                  family = "Overpass Mono",
+                  fontface = "bold",
+                  size = 1.9,
+                  hjust = .5)
+    
+    ggsave(here::here("plots", "2020_03", "series_begin", glue::glue("corona_yday_latest.pdf")),
+           width = 18.2, height = 12.2, device = cairo_pdf)
+  }
+}
+
+
+## convert pdf's to png's
+setwd(here::here("plots", "2020_03", "series_begin"))
+pdfs <- list.files(here::here("plots", "2020_03", "series_begin"), pattern = "*.pdf")
+
+for(pdf in pdfs) {
+  pdf_convert(pdf = here::here("plots", "2020_03", "series_begin", pdf), 
+              format = "png", dpi = 200)
+}
+
+## convert png's to gif
+system("magick.exe -delay 70 *.png -delay 700 *latest_1.png -loop 0 corona_series_begin.gif")
+```
+
