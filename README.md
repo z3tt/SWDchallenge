@@ -43,8 +43,6 @@ Feedback is very welcome via [Twitter](https://twitter.com/cedscherer) or [mail]
 
 ***
 
-
-
 <div align="center">
   <h4>Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0)</h4>
 <div style="width:300px; height:200px">
